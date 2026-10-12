@@ -1,5 +1,5 @@
 # coding=utf-8
-# Copyright 2018 The Google Research Authors.
+# Copyright 2026 The Google Research Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,11 +18,14 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-import cPickle as pickle
+
 import os
+
 import numpy as np
 import scipy.stats as spstats
-import tensorflow as tf
+import six.moves.cPickle as pickle
+import tensorflow.compat.v1 as tf
+
 import uncertainties.sources.utils.util as util
 
 
@@ -163,11 +166,11 @@ def sec_classification(y_true, y_pred, conf):
   n = len(y_true)
   ind = np.argsort(conf)
   y_true, y_pred, conf = y_true[ind][::-1], y_pred[ind][::-1], conf[ind][::-1]
-  risk_cov = np.divide(np.cumsum(y_true != y_pred).astype(np.float),
+  risk_cov = np.divide(np.cumsum(y_true != y_pred).astype(float),
                        np.arange(1, n+1))
   nrisk = np.sum(y_true != y_pred)
   aurc = np.mean(risk_cov)
-  opt_aurc = (1./n) * np.sum(np.divide(np.arange(1, nrisk + 1).astype(np.float),
+  opt_aurc = (1./n) * np.sum(np.divide(np.arange(1, nrisk + 1).astype(float),
                                        n - nrisk + np.arange(1, nrisk + 1)))
   eaurc = aurc - opt_aurc
   return (conf, risk_cov, aurc, eaurc)
@@ -202,7 +205,7 @@ def negloglikelihood(y, p_tab):
     neglog: negative log likelihood, along the iterations
             numpy vector of size num_samples
   """
-  p_mean = util.cummean(p_tab[y.astype(np.bool), :], axis=1)
+  p_mean = util.cummean(p_tab[y.astype(bool), :], axis=1)
   neglog = - np.mean(np.log(p_mean), axis=0)
   return neglog
 
@@ -311,7 +314,7 @@ def calibration(y, p_mean, num_bins=10):
   # Expected Calibration Error
   ece = np.average(
       np.absolute(mean_conf - acc_tab),
-      weights=nb_items_bin.astype(np.float) / np.sum(nb_items_bin))
+      weights=nb_items_bin.astype(float) / np.sum(nb_items_bin))
   # Maximum Calibration Error
   mce = np.max(np.absolute(mean_conf - acc_tab))
   # Saving
@@ -319,9 +322,3 @@ def calibration(y, p_mean, num_bins=10):
          'ece': ece,
          'mce': mce}
   return cal
-
-
-
-
-
-

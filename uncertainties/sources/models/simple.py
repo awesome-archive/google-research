@@ -1,5 +1,5 @@
 # coding=utf-8
-# Copyright 2018 The Google Research Authors.
+# Copyright 2026 The Google Research Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,9 +21,13 @@ from __future__ import print_function
 
 import os
 import time
-import numpy as np
-import tensorflow as tf
+
 import gin.tf
+import numpy as np
+import six
+import tensorflow.compat.v1 as tf
+from tensorflow.contrib import layers as contrib_layers
+
 
 MAX_BYTES_MEM = 10**8
 
@@ -111,10 +115,10 @@ class LastLayerBayesian(object):
       _variable_summaries(self.ll_vars_concat)
 
       # add regularization that acts as a unit Gaussian prior on the last layer
-      regularizer = tf.contrib.layers.l2_regularizer(1.0)
+      regularizer = contrib_layers.l2_regularizer(1.0)
 
       # regularization
-      prior = tf.contrib.layers.apply_regularization(regularizer, self.ll_vars)
+      prior = contrib_layers.apply_regularization(regularizer, self.ll_vars)
       self.bayesian_loss = self.n * self.loss + prior
 
       # saving the weights of last layer when running SGLD/SGD/MCMC algorithm
@@ -195,7 +199,8 @@ class LastLayerBayesian(object):
     # sampling
     init_t = time.time()
     print('-----------------------------------------------------')
-    print('Starting sampling of the Bayesian Neural Network by ' + self.sampler)
+    print('Starting sampling of the Bayesian Neural Network by ' +
+          six.ensure_str(self.sampler))
     for i in np.arange(0, num_iters):
       batch_x, batch_y = self.next_batch()
       feed_dict = {self.x: batch_x, self.y: batch_y}

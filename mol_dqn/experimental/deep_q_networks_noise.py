@@ -1,5 +1,5 @@
 # coding=utf-8
-# Copyright 2018 The Google Research Authors.
+# Copyright 2026 The Google Research Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,10 @@ from __future__ import print_function
 import functools
 
 import numpy as np
-import tensorflow as tf
+from six.moves import range
+from six.moves import zip
+import tensorflow.compat.v1 as tf
+from tensorflow.contrib import layers as contrib_layers
 
 
 class DeepQNetwork(object):
@@ -281,7 +284,7 @@ class DeepQNetwork(object):
     """
     with tf.variable_scope(self.scope, reuse=self.reuse):
 
-      self.optimization_op = tf.contrib.layers.optimize_loss(
+      self.optimization_op = contrib_layers.optimize_loss(
           loss=self.weighted_error,
           global_step=tf.train.get_or_create_global_step(),
           learning_rate=self.learning_rate,
@@ -352,12 +355,12 @@ class DeepQNetwork(object):
     Returns:
       Integer. which action to be performed.
     """
-    return np.asscalar(tf.get_default_session().run(
+    return tf.get_default_session().run(
         self.action,
         feed_dict={
             self.observations: observations,
             self.head: head
-        }))
+        }).item()
 
   def get_action(self,
                  observations,
@@ -686,8 +689,7 @@ class MultiObjectiveDeepQNetwork(DeepQNetwork):
     for i, reward_value in enumerate(reward):
       feed_dict[self.rewards[i]] = reward_value
     # calculated the weighted sum of the rewards.
-    feed_dict[self.weighted_reward] = np.asscalar(
-        np.array([reward]).dot(self.objective_weight))
+    feed_dict[self.weighted_reward] = np.array([reward]).dot(self.objective_weight).item()
     return tf.get_default_session().run(
         self.episode_summary, feed_dict=feed_dict)
 
@@ -702,13 +704,13 @@ class MultiObjectiveDeepQNetwork(DeepQNetwork):
     Returns:
       Integer. which action to be performed.
     """
-    return np.asscalar(tf.get_default_session().run(
+    return tf.get_default_session().run(
         self.action,
         feed_dict={
             self.observations: observations,
             self.objective_weight_input: self.objective_weight,
             self.head: head
-        }))
+        }).item()
 
 
 def multi_layer_model(inputs, hparams, reuse=None):
